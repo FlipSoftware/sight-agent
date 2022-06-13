@@ -1,57 +1,80 @@
-use std::{
-    io::{Error, ErrorKind},
-    str::FromStr,
+#![warn(clippy::all)]
+use handle_errors::handle_errors;
+use warp::{http::Method, Filter};
+
+use crate::{
+    db::Database,
+    routes::{
+        info::add_info_to_kb,
+        knowledge_base::{add_kb, delete_kb, get_kb, update_kb},
+    },
 };
-use warp::Filter;
+
+mod db;
+mod routes;
+mod types;
 
 #[tokio::main]
 async fn main() {
-    let q = KnowledgeBase::new(
-        KBId::from_str("1").expect("ID must be provided"),
-        "First".to_string(),
-        "Content".to_string(),
-        Some(vec!["FAQ".to_string()]),
-    );
-    println!("{q:?}");
+    let db = Database::new();
+    let db_access = warp::any().map(move || db.clone());
 
-    // Init Server
-    let routes = warp::path("api")
+    let cors = warp::cors()
+        .allow_any_origin()
+        .allow_header("content-type")
+        .allow_methods(&[Method::GET, Method::POST, Method::PUT, Method::DELETE]);
+
+    let kb_data = warp::get()
+        .and(warp::path("kb"))
         .and(warp::path::end())
-        .map(|| warp::reply::json(&"Hello, Rust!".to_string()));
+        .and(warp::query())
+        .and(db_access.clone())
+        .and_then(get_kb);
 
-    // Start Server
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    let add_kb = warp::post()
+        .and(warp::path("kb"))
+        .and(warp::path::end())
+        .and(db_access.clone())
+        .and(warp::body::json())
+        .and_then(add_kb);
+
+    let update_kb = warp::put()
+        .and(warp::path("kb"))
+        .and(warp::path::param::<String>())
+        .and(warp::path::end())
+        .and(db_access.clone())
+        .and(warp::body::json())
+        .and_then(update_kb);
+
+    let delete_kb = warp::put()
+        .and(warp::path("kb"))
+        .and(warp::path::param::<String>())
+        .and(warp::path::end())
+        .and(db_access.clone())
+        .and_then(delete_kb);
+
+    let add_info_to_kb = warp::post()
+        .and(warp::path("info"))
+        .and(warp::path::end())
+        .and(db_access.clone())
+        .and(warp::body::form())
+        .and_then(add_info_to_kb);
+
+    // TODO: add :id route
+
+    let router = kb_data
+        .or(add_kb)
+        .or(update_kb)
+        .or(delete_kb)
+        .or(add_info_to_kb)
+        .with(cors)
+        .recover(handle_errors);
+    println!("Running server on port: 8080");
+    warp::serve(router).run(([127, 0, 0, 1], 8080)).await;
 }
 
-#[derive(Debug)]
-struct KnowledgeBase {
-    id: KBId,
-    title: String,
-    content: String,
-    tags: Option<Vec<String>>,
-}
+// SECTION: Types
 
-#[derive(Debug)]
-struct KBId(String);
+// SECTION: Functions
 
-impl KnowledgeBase {
-    fn new(id: KBId, title: String, content: String, tags: Option<Vec<String>>) -> Self {
-        Self {
-            id,
-            title,
-            content,
-            tags,
-        }
-    }
-}
-
-impl FromStr for KBId {
-    type Err = Error;
-
-    fn from_str(id: &str) -> Result<Self, Self::Err> {
-        match id.is_empty() {
-            true => Err(Error::new(ErrorKind::InvalidInput, "ID must be provided")),
-            false => Ok(KBId(id.to_string())),
-        }
-    }
-}
+// SECTION: Mods

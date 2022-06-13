@@ -6,5 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = {version = "1.19", features = ["full"] }
+parking_lot = "0.12.1"
+serde = { version = "1.0.137", features = ["derive"] }
+serde_json = "1.0.81"
+tokio = { version = "1.19", features = ["full"] }
+uuid = { version = "1", features = ["v4", "fast-rng", "serde"] }
 warp = "0.3"
+handle-errors = { path = "handle-errors" }
