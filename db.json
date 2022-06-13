@@ -1,0 +1,8 @@
+{
+  "1": {
+    "id": "1",
+    "title": "Title",
+    "content": "Content",
+    "tags": ["tag1", "tag2"]
+  }
+}
