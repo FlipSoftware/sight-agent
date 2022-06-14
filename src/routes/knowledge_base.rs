@@ -1,3 +1,4 @@
+use colored::Colorize;
 use handle_errors::Error;
 use std::collections::HashMap;
 
@@ -10,14 +11,17 @@ use crate::{
 pub async fn get_kb(
     params: HashMap<String, String>,
     kb_db: Database,
+    id: String,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    println!("{params:?}");
+    log::info!("{}", "Fecthing knowledge base data...");
     if !params.is_empty() {
         let page = get_pagination(params)?;
+        log::info!("{} {:?}, id: {}", "Page set to:".green(), &page, &id);
         let kb_response: Vec<KnowledgeBase> = kb_db.kb.read().values().cloned().collect();
         let kb_response = &kb_response[page.start..page.end];
         Ok(warp::reply::json(&kb_response))
     } else {
+        log::info!("{}, {}", "No page set".yellow(), &id);
         let kb_response: Vec<KnowledgeBase> = kb_db.kb.read().values().cloned().collect();
         Ok(warp::reply::json(&kb_response))
     }
