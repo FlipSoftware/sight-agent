@@ -1,24 +1,38 @@
 use handle_errors::Error;
 use std::collections::HashMap;
 
-#[derive(Debug)]
+/// # Pagination `struct` reads the url query and returns based on input.
+///
+/// - Example
+/// ```rust
+/// fn get_page_offset(params: HashMap<String, String>) -> Result<Pagination, Error> {
+///     if params.contains_key("key") {
+///         Ok(// do something with the value captured and return a Result<Pagination>)
+///         Err(// didn't capture expected value return an Result<Error>)
+///     }
+/// }
+///
+/// ```
+#[derive(Default, Debug)]
 pub struct Pagination {
-    pub start: usize,
-    pub end: usize,
+    pub limit: Option<u32>,
+    pub offset: u32,
 }
 
-pub fn get_pagination(params: HashMap<String, String>) -> Result<Pagination, Error> {
-    if params.contains_key("start") && params.contains_key("end") {
+pub fn get_page_offset(params: HashMap<String, String>) -> Result<Pagination, Error> {
+    if params.contains_key("limit") && params.contains_key("offset") {
         return Ok(Pagination {
-            start: params
-                .get("start")
+            limit: Some(
+                params
+                    .get("start")
+                    .unwrap()
+                    .parse::<u32>()
+                    .map_err(Error::ParseError)?,
+            ),
+            offset: params
+                .get("offset")
                 .unwrap()
-                .parse::<usize>()
-                .map_err(Error::ParseError)?,
-            end: params
-                .get("start")
-                .unwrap()
-                .parse::<usize>()
+                .parse::<u32>()
                 .map_err(Error::ParseError)?,
         });
     }
