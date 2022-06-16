@@ -1,2 +1,3 @@
-pub mod info;
-pub mod knowledge_base;
+pub mod kb_list;
+pub mod kb_reply;
+pub mod reply;

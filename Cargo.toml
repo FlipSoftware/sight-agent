@@ -1,5 +1,5 @@
 [package]
-name = "rust-help-center"
+name = "rust-kb-center"
 version = "0.1.0"
 authors = ["Breno Rocha <bhrochamail@gmail.com>"]
 edition = "2021"
@@ -14,6 +14,8 @@ tokio = { version = "1.19", features = ["full"] }
 uuid = { version = "1", features = ["v4", "fast-rng", "serde"] }
 warp = "0.3"
 handle-errors = { path = "handle-errors" }
-log = "0.4"
-log4rs = "1.1"
 colored = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+sqlx = { version = "0.5", features = ["runtime-tokio-rustls", "postgres", "migrate"] }
+rand = "0.8.5"

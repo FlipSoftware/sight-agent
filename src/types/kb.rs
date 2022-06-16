@@ -9,4 +9,11 @@ pub struct KnowledgeBase {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
-pub struct KBId(pub String); // TODO: change to uuid
+pub struct KBId(pub i32);
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct NewKB {
+    pub title: String,
+    pub content: String,
+    pub tags: Option<Vec<String>>,
+}

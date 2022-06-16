@@ -562,3 +562,103 @@
     "accept": "*/*",
     "host": "localhost:8080",
 }
+2022-06-14T16:29:37.955383355-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:29:37.956337588-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:29:37.956420367-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:29:37.961275664-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:29:37.961449169-03:00 - listening on http://127.0.0.1:8080
+2022-06-14T16:30:03.308067917-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:30:03.308164771-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:30:03.308291518-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:30:03.308775826-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:30:03.308868608-03:00 - listening on http://127.0.0.1:8080
+2022-06-14T16:30:14.966261990-03:00 - Fecthing knowledge base data...
+2022-06-14T16:30:14.966862341-03:00 - [32mPage set to:[0m Pagination { start: 1, end: 1 }, id: 084fc1d4-2485-4899-b4ff-c226a545bd9c
+2022-06-14T16:30:14.967287415-03:00 - [48;2;0;128;0m STATE LOG [0m[5;31m rec [0m
+ [1;32mGET[0m /kb [1;34m200 OK[0m 1.191207ms from [33m127.0.0.1:50510[0m with {
+    "accept-encoding": "gzip, deflate, br",
+    "user-agent": "xh/0.16.1",
+    "connection": "keep-alive",
+    "accept": "*/*",
+    "host": "localhost:8080",
+}
+2022-06-14T16:30:40.880700417-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:30:40.880782568-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:30:40.880857766-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:30:40.881106916-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:30:40.881150486-03:00 - listening on http://127.0.0.1:8080
+2022-06-14T16:30:57.267495144-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:30:57.267639009-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:30:57.268446640-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:30:57.268733534-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:30:57.268779822-03:00 - listening on http://127.0.0.1:8080
+2022-06-14T16:31:05.589798771-03:00 - Fecthing knowledge base data...
+2022-06-14T16:31:05.589913316-03:00 - [32mPage set to:[0m Pagination { start: 1, end: 1 }, id: b0c8f0b3-75eb-4cb9-a45b-160225f77742
+2022-06-14T16:31:05.590159418-03:00 - [48;2;0;128;0m STATE LOG [0m[5;31m rec [0m
+ [1;32mGET[0m /kb [1;34m200 OK[0m 447.694µs from [33m127.0.0.1:54836[0m with {
+    "accept-encoding": "gzip, deflate, br",
+    "user-agent": "xh/0.16.1",
+    "connection": "keep-alive",
+    "accept": "*/*",
+    "host": "localhost:8080",
+}
+2022-06-14T16:32:16.935256252-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:32:16.935344650-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:32:16.935408843-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:32:16.936535661-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:32:16.936807309-03:00 - listening on http://127.0.0.1:8080
+2022-06-14T16:32:32.054342206-03:00 - Fecthing knowledge base data...
+2022-06-14T16:32:32.054471520-03:00 - [32mPage set to:[0m Pagination { start: 1, end: 1 }, id: 2c07764b-8b7a-4384-86d2-ca457688e779
+2022-06-14T16:32:32.054676402-03:00 - [48;2;0;128;0m STATE LOG [0m[5;31m rec [0m
+ [1;32mGET[0m /kb [1;34m200 OK[0m 783.936µs from [33m127.0.0.1:43462[0m with {
+    "accept-encoding": "gzip, deflate, br",
+    "user-agent": "xh/0.16.1",
+    "connection": "keep-alive",
+    "accept": "*/*",
+    "host": "localhost:8080",
+}
+2022-06-14T16:33:48.281728823-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:33:48.281862784-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:33:48.281977459-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:33:48.283244266-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:33:48.283597834-03:00 - listening on http://127.0.0.1:8080
+2022-06-14T16:34:07.520748142-03:00 - Fecthing knowledge base data...
+2022-06-14T16:34:07.520838069-03:00 - [32mPage set to:[0m Pagination { start: 1, end: 1 }, id: e3e81285-52de-4cac-ada1-b83b3a1e9b76
+2022-06-14T16:34:07.521067540-03:00 - [48;2;0;128;0m STATE LOG [0m[5;31m rec [0m
+ [1;32mGET[0m /kb [1;34m200 OK[0m 386.955µs from [33m127.0.0.1:42910[0m with {
+    "accept-encoding": "gzip, deflate, br",
+    "user-agent": "xh/0.16.1",
+    "connection": "keep-alive",
+    "accept": "*/*",
+    "host": "localhost:8080",
+}
+2022-06-14T16:34:38.706047765-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:34:38.706225684-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:34:38.706380073-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:34:38.707502698-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:34:38.708006674-03:00 - listening on http://127.0.0.1:8080
+2022-06-14T16:35:07.076589677-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:35:07.076678129-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:35:07.076818552-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:35:07.077244179-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:35:07.077307225-03:00 - listening on http://127.0.0.1:8080
+2022-06-14T16:36:27.957093345-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:36:27.957504946-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:36:27.957909040-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:36:27.962306528-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:36:27.962409495-03:00 - listening on http://127.0.0.1:8080
+2022-06-14T16:39:37.633667747-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:39:37.633765715-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:39:37.633839531-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:39:37.637259120-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:39:37.637346548-03:00 - listening on http://127.0.0.1:8080
+2022-06-14T16:44:39.243838406-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:44:39.244183705-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:44:39.244298131-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:44:39.248770834-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:44:39.248831180-03:00 - listening on http://127.0.0.1:8080
+2022-06-14T16:44:42.609598604-03:00 - [1;41;37m ERROR [0m Capturing stderr
+2022-06-14T16:44:42.609889640-03:00 - [1;46;30m INFO [0m Capturing stdout
+2022-06-14T16:44:42.610039780-03:00 - [1;43;30m WARN [0m Capture stdout warnings
+2022-06-14T16:44:42.610409447-03:00 - Server::run; addr=127.0.0.1:8080
+2022-06-14T16:44:42.610499529-03:00 - listening on http://127.0.0.1:8080
