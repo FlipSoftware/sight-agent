@@ -28,8 +28,8 @@ impl Database {
 
     pub async fn get_kb(
         &self,
-        limit: Option<u32>,
-        offset: u32,
+        limit: Option<i32>,
+        offset: i32,
     ) -> Result<Vec<KnowledgeBase>, handle_errors::Error> {
         match sqlx::query("SELECT * from kb LIMIT $1 OFFSET $2")
             .bind(limit)
