@@ -28,6 +28,11 @@ async fn main() {
         .init();
 
     let db = Database::new("postgres://postgres:123123@localhost/postgres").await;
+    // run migrations after database successfull connection
+    sqlx::migrate!()
+        .run(&db.clone().connection)
+        .await
+        .expect_err("Migrations failed");
     let db_access = warp::any().map(move || db.clone());
 
     let cors = warp::cors()
