@@ -8,7 +8,7 @@ use warp::{http::Method, Filter};
 use crate::{
     db::Database,
     routes::{
-        kb_list::{add_kb, delete_kb, get_kb, update_kb},
+        kb_list::{add_kb, delete_kb, get_kb, get_kb_by_id, update_kb},
         reply::add_reply,
     },
 };
@@ -32,7 +32,7 @@ async fn main() {
     sqlx::migrate!()
         .run(&db.clone().connection)
         .await
-        .expect_err("Migrations failed");
+        .expect("Migrations failed");
     let db_access = warp::any().map(move || db.clone());
 
     let cors = warp::cors()
@@ -55,6 +55,20 @@ async fn main() {
             )
         }));
 
+    let get_kb_by_id = warp::get()
+        .and(warp::path("kb"))
+        .and(warp::path::param())
+        .and(db_access.clone())
+        .and_then(get_kb_by_id)
+        .with(warp::trace(|info| {
+            tracing::info_span!(
+                "GET kb/{id} request",
+                method = %info.method(),
+                path = %info.path(),
+                id = %Uuid::new_v4(),
+            )
+        }));
+
     let add_kb = warp::post()
         .and(warp::path("kb"))
         .and(warp::path::end())
@@ -70,7 +84,7 @@ async fn main() {
         .and(warp::body::json())
         .and_then(update_kb);
 
-    let delete_kb = warp::put()
+    let delete_kb = warp::post()
         .and(warp::path("kb"))
         .and(warp::path::param::<i32>())
         .and(warp::path::end())
@@ -78,16 +92,15 @@ async fn main() {
         .and_then(delete_kb);
 
     let add_reply = warp::post()
-        .and(warp::path("info"))
+        .and(warp::path("kb"))
         .and(warp::path::end())
         .and(db_access.clone())
         .and(warp::body::form())
         .and_then(add_reply);
 
-    // TODO: add :id route
-
     let router = get_kb
         .or(add_kb)
+        .or(get_kb_by_id)
         .or(update_kb)
         .or(delete_kb)
         .or(add_reply)

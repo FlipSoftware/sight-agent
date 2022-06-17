@@ -27,6 +27,14 @@ pub async fn get_kb(
     }
 }
 
+pub async fn get_kb_by_id(id: i32, kb_db: Database) -> Result<impl warp::Reply, warp::Rejection> {
+    event!(target: "rust-kb-center", Level::INFO, "pick selected KD id from database...");
+    match kb_db.get_kb_by_id(id).await {
+        Ok(res) => Ok(warp::reply::json(&res)),
+        Err(e) => Err(warp::reject::custom(e)),
+    }
+}
+
 pub async fn add_kb(kb_db: Database, new_kb: NewKB) -> Result<impl warp::Reply, warp::Rejection> {
     match kb_db.add_kb(new_kb).await {
         Ok(_) => Ok(warp::reply::with_status(
@@ -42,7 +50,14 @@ pub async fn update_kb(
     kb_db: Database,
     update_kb: KnowledgeBase,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    match kb_db.update_kb(update_kb, id).await {
+    let updated_kb = KnowledgeBase {
+        id: update_kb.id.to_owned(),
+        title: update_kb.title.to_owned(),
+        content: update_kb.content.to_owned(),
+        tags: update_kb.tags.to_owned(),
+    };
+
+    match kb_db.update_kb(updated_kb, id).await {
         Ok(res) => Ok(warp::reply::json(&res)),
         Err(e) => Err(warp::reject::custom(e)),
     }

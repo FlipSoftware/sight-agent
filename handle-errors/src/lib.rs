@@ -15,7 +15,7 @@ impl std::fmt::Display for Error {
             Error::ParseError(ref err) => write!(f, "Invalid parameter: {}", err),
             Error::ParamsAbsent => write!(f, "Missing required parameter"),
             Error::KBAbsent => write!(f, "KB not found in the database"),
-            Error::DBQueryError => write!(f, "The query doesn't match the database data"),
+            Error::DBQueryError => write!(f, "The typed data doesn't match the database format"),
         }
     }
 }
@@ -35,7 +35,7 @@ pub async fn handle_errors(error: Rejection) -> Result<impl Reply, Rejection> {
             e.to_string(),
             warp::http::StatusCode::FORBIDDEN,
         ))
-    } else if let Some(e) = error.find::<BodyDeserializeError>() {
+    } else if let Some(_e) = error.find::<BodyDeserializeError>() {
         event!(Level::ERROR, "Error querying data from the database");
         Ok(warp::reply::with_status(
             crate::Error::DBQueryError.to_string(),

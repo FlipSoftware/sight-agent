@@ -84,9 +84,7 @@ INSERT INTO kb (title, content, tags) VALUES ($1, $2, $3) RETURNING id, title, c
     ) -> Result<KnowledgeBase, handle_errors::Error> {
         match sqlx::query(
             "
-UPDATE kb SET title = $1, content = $2, tags = $3
-WHERE id = $4
-RETURNING id, title, content, tags
+UPDATE kb SET title = $1, content = $2, tags = $3 WHERE id = $4 RETURNING id, title, content, tags
             ",
         )
         .bind(kb.title)
@@ -121,6 +119,26 @@ DELETE FROM kb WHERE id = $1
         .await
         {
             Ok(_) => Ok(true),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{}", e);
+                Err(handle_errors::Error::DBQueryError)
+            }
+        }
+    }
+
+    pub async fn get_kb_by_id(&self, kb_id: i32) -> Result<KnowledgeBase, handle_errors::Error> {
+        match sqlx::query("SELECT * from kb WHERE id = $1")
+            .bind(kb_id)
+            .map(|row| KnowledgeBase {
+                id: KBId(row.get("id")),
+                title: row.get("title"),
+                content: row.get("content"),
+                tags: row.get("tags"),
+            })
+            .fetch_one(&self.connection)
+            .await
+        {
+            Ok(kb) => Ok(kb),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{}", e);
                 Err(handle_errors::Error::DBQueryError)
