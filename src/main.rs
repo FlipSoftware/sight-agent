@@ -98,7 +98,23 @@ async fn main() {
         .and(warp::body::form())
         .and_then(add_reply);
 
+    let register = warp::post()
+        .and(warp::path("register"))
+        .and(warp::path::end())
+        .and(db_access.clone())
+        .and(warp::body::json())
+        .and_then(routes::auth::register);
+
+    let login = warp::post()
+        .and(warp::path("login"))
+        .and(warp::path::end())
+        .and(db_access.clone())
+        .and(warp::body::json())
+        .and_then(routes::auth::login);
+
     let router = get_kb
+        .or(register)
+        .or(login)
         .or(add_kb)
         .or(get_kb_by_id)
         .or(update_kb)

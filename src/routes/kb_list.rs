@@ -1,4 +1,3 @@
-use colored::Colorize;
 use std::collections::HashMap;
 use tracing::{event, instrument, Level};
 

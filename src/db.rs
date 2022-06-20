@@ -1,6 +1,7 @@
 use sqlx::{postgres::PgPoolOptions, PgPool, Row};
 
 use crate::types::{
+    account::{Account, AccountId},
     kb::{KBId, KnowledgeBase, NewKB},
     reply::{NewReply, Reply, ReplyId},
 };
@@ -46,7 +47,27 @@ impl Database {
             Ok(kb) => Ok(kb),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{}", e);
-                Err(handle_errors::Error::DBQueryError)
+                Err(handle_errors::Error::DBQueryError(e))
+            }
+        }
+    }
+
+    pub async fn get_kb_by_id(&self, kb_id: i32) -> Result<KnowledgeBase, handle_errors::Error> {
+        match sqlx::query("SELECT * from kb WHERE id = $1")
+            .bind(kb_id)
+            .map(|row| KnowledgeBase {
+                id: KBId(row.get("id")),
+                title: row.get("title"),
+                content: row.get("content"),
+                tags: row.get("tags"),
+            })
+            .fetch_one(&self.connection)
+            .await
+        {
+            Ok(kb) => Ok(kb),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{}", e);
+                Err(handle_errors::Error::DBQueryError(e))
             }
         }
     }
@@ -72,7 +93,7 @@ INSERT INTO kb (title, content, tags) VALUES ($1, $2, $3) RETURNING id, title, c
             Ok(kb) => Ok(kb),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{}", e);
-                Err(handle_errors::Error::DBQueryError)
+                Err(handle_errors::Error::DBQueryError(e))
             }
         }
     }
@@ -84,7 +105,9 @@ INSERT INTO kb (title, content, tags) VALUES ($1, $2, $3) RETURNING id, title, c
     ) -> Result<KnowledgeBase, handle_errors::Error> {
         match sqlx::query(
             "
-UPDATE kb SET title = $1, content = $2, tags = $3 WHERE id = $4 RETURNING id, title, content, tags
+UPDATE kb SET title = $1, content = $2, tags = $3
+WHERE id = $4
+RETURNING id, title, content, tags
             ",
         )
         .bind(kb.title)
@@ -103,7 +126,7 @@ UPDATE kb SET title = $1, content = $2, tags = $3 WHERE id = $4 RETURNING id, ti
             Ok(kb) => Ok(kb),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{}", e);
-                Err(handle_errors::Error::DBQueryError)
+                Err(handle_errors::Error::DBQueryError(e))
             }
         }
     }
@@ -121,27 +144,7 @@ DELETE FROM kb WHERE id = $1
             Ok(_) => Ok(true),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{}", e);
-                Err(handle_errors::Error::DBQueryError)
-            }
-        }
-    }
-
-    pub async fn get_kb_by_id(&self, kb_id: i32) -> Result<KnowledgeBase, handle_errors::Error> {
-        match sqlx::query("SELECT * from kb WHERE id = $1")
-            .bind(kb_id)
-            .map(|row| KnowledgeBase {
-                id: KBId(row.get("id")),
-                title: row.get("title"),
-                content: row.get("content"),
-                tags: row.get("tags"),
-            })
-            .fetch_one(&self.connection)
-            .await
-        {
-            Ok(kb) => Ok(kb),
-            Err(e) => {
-                tracing::event!(tracing::Level::ERROR, "{}", e);
-                Err(handle_errors::Error::DBQueryError)
+                Err(handle_errors::Error::DBQueryError(e))
             }
         }
     }
@@ -165,7 +168,57 @@ INSERT INTO reply (content, kb_id) VALUES ($1, $2)
             Ok(reply) => Ok(reply),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
-                Err(handle_errors::Error::DBQueryError)
+                Err(handle_errors::Error::DBQueryError(e))
+            }
+        }
+    }
+
+    pub async fn get_account(self, email: String) -> Result<Account, handle_errors::Error> {
+        match sqlx::query("SELECT * from accounts WHERE email = $1")
+            .bind(email)
+            .map(|row| Account {
+                id: Some(AccountId(row.get("id"))),
+                email: row.get("email"),
+                password: row.get("password"),
+            })
+            .fetch_one(&self.connection)
+            .await
+        {
+            Ok(acc) => Ok(acc),
+            Err(error) => {
+                tracing::event!(tracing::Level::ERROR, "{:?}", error);
+                Err(handle_errors::Error::DBQueryError(error))
+            }
+        }
+    }
+
+    pub async fn add_account(self, account: Account) -> Result<bool, handle_errors::Error> {
+        match sqlx::query(
+            "
+INSERT INTO accounts (email, password) VALUES ($1, $2)
+            ",
+        )
+        .bind(account.email)
+        .bind(account.password)
+        .execute(&self.connection)
+        .await
+        {
+            Ok(_) => Ok(true),
+            Err(e) => {
+                // Error type captured is slqx::error::Error
+                tracing::event!(
+                    tracing::Level::ERROR,
+                    code = e
+                        .as_database_error()
+                        .unwrap()
+                        .code()
+                        .unwrap()
+                        .parse::<i32>()
+                        .unwrap(),
+                    db_message = e.as_database_error().unwrap().message(),
+                    constraint = e.as_database_error().unwrap().constraint().unwrap()
+                );
+                Err(handle_errors::Error::DBQueryError(e))
             }
         }
     }

@@ -17,4 +17,8 @@ handle-errors = { path = "handle-errors" }
 colored = "2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-sqlx = { version = "0.6.0", features = ["runtime-tokio-rustls", "postgres", "migrate"] }
+sqlx = { version = "0.6.0", features = ["runtime-tokio-rustls", "postgres", "migrate", "uuid"] }
+rand = "0.8"
+rust-argon2 = "1"
+paseto = "2"
+chrono = "0.4.19"
