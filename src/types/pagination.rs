@@ -15,8 +15,8 @@ use std::collections::HashMap;
 /// ```
 #[derive(Default, Debug)]
 pub struct Pagination {
-    pub limit: Option<u32>,
-    pub offset: u32,
+    pub limit: Option<i32>,
+    pub offset: i32,
 }
 
 pub fn get_page_offset(params: HashMap<String, String>) -> Result<Pagination, Error> {
@@ -26,13 +26,13 @@ pub fn get_page_offset(params: HashMap<String, String>) -> Result<Pagination, Er
                 params
                     .get("start")
                     .unwrap()
-                    .parse::<u32>()
+                    .parse::<i32>()
                     .map_err(Error::ParseError)?,
             ),
             offset: params
                 .get("offset")
                 .unwrap()
-                .parse::<u32>()
+                .parse::<i32>()
                 .map_err(Error::ParseError)?,
         });
     }

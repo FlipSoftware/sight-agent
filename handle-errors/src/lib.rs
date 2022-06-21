@@ -1,52 +1,93 @@
+#![warn(clippy::all)]
 use tracing::{event, instrument, Level};
-use warp::{body::BodyDeserializeError, reject::Reject, Rejection, Reply};
+use warp::{reject::Reject, Rejection, Reply};
 
 #[derive(Debug)]
 pub enum Error {
     ParseError(std::num::ParseIntError),
-    KBAbsent,
+    KBMissing,
     ParamsAbsent,
-    DBQueryError,
+    DBQueryError(sqlx::Error),
+    WrongPassword,
+    LibArgonError(argon2::Error),
+    FailTokenDecryption,
+    Unauthorized,
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match *self {
+        match self {
             Error::ParseError(ref err) => write!(f, "Invalid parameter: {}", err),
             Error::ParamsAbsent => write!(f, "Missing required parameter"),
-            Error::KBAbsent => write!(f, "KB not found in the database"),
-            Error::DBQueryError => write!(f, "The query doesn't match the database data"),
+            Error::KBMissing => write!(f, "KB not found in the database"),
+            Error::DBQueryError(_) => write!(f, "Unable to proceed with the query"),
+            Error::WrongPassword => write!(f, "Wrong password"),
+            Error::LibArgonError(_) => write!(f, "Unable to verify password"),
+            Error::FailTokenDecryption => write!(f, "Unable decrypt token"),
+            Error::Unauthorized => write!(f, "Unauthorized access to modify content"),
         }
     }
 }
 impl Reject for Error {}
 
 #[instrument]
-pub async fn handle_errors(error: Rejection) -> Result<impl Reply, Rejection> {
-    if let Some(e) = error.find::<Error>() {
-        event!(Level::ERROR, "Error: {}", e);
-        Ok(warp::reply::with_status(
-            e.to_string(),
-            warp::http::StatusCode::RANGE_NOT_SATISFIABLE,
-        ))
-    } else if let Some(e) = error.find::<warp::filters::cors::CorsForbidden>() {
-        event!(Level::ERROR, "Error with CORS: fobbiden access");
-        Ok(warp::reply::with_status(
-            e.to_string(),
-            warp::http::StatusCode::FORBIDDEN,
-        ))
-    } else if let Some(e) = error.find::<BodyDeserializeError>() {
-        event!(Level::ERROR, "Error querying data from the database");
-        Ok(warp::reply::with_status(
-            crate::Error::DBQueryError.to_string(),
+pub async fn handle_errors(rejection: Rejection) -> Result<impl Reply, Rejection> {
+    match rejection.find() {
+        Some(crate::Error::DBQueryError(err)) => {
+            event!(Level::ERROR, "Database query error");
+
+            match err {
+                sqlx::Error::Database(e) => {
+                    if e.code().unwrap().parse::<i32>().unwrap() == 23505 {
+                        Ok(warp::reply::with_status(
+                            "Account already exists",
+                            warp::http::StatusCode::CONFLICT,
+                        ))
+                    } else {
+                        Ok(warp::reply::with_status(
+                            "Unprocessable entity",
+                            warp::http::StatusCode::UNPROCESSABLE_ENTITY,
+                        ))
+                    }
+                }
+                _ => Ok(warp::reply::with_status(
+                    "Unprocessable entity",
+                    warp::http::StatusCode::UNPROCESSABLE_ENTITY,
+                )),
+            }
+        }
+        Some(crate::Error::WrongPassword) => {
+            event!(Level::ERROR, "Invalid password");
+            Ok(warp::reply::with_status(
+                "Invalid email/password combination",
+                warp::http::StatusCode::UNAUTHORIZED,
+            ))
+        }
+        Some(crate::Error::LibArgonError(_)) => {
+            event!(Level::ERROR, "Lib Argon error");
+            Ok(warp::reply::with_status(
+                "Unable to verify password",
+                warp::http::StatusCode::UNAUTHORIZED,
+            ))
+        }
+        Some(crate::Error::FailTokenDecryption) => {
+            event!(Level::ERROR, "Fail token decryption");
+            Ok(warp::reply::with_status(
+                "Unable to decrypt token",
+                warp::http::StatusCode::UNAUTHORIZED,
+            ))
+        }
+        Some(crate::Error::Unauthorized) => {
+            event!(Level::ERROR, "Unauthorized access");
+            Ok(warp::reply::with_status(
+                "Unauthorized access to modify content",
+                warp::http::StatusCode::UNAUTHORIZED,
+            ))
+        }
+        _ => Ok(warp::reply::with_status(
+            "Unprocessable entity",
             warp::http::StatusCode::UNPROCESSABLE_ENTITY,
-        ))
-    } else {
-        event!(Level::ERROR, "Inaccessible route");
-        Ok(warp::reply::with_status(
-            "Inacessible route".to_string(),
-            warp::http::StatusCode::NOT_FOUND,
-        ))
+        )),
     }
 }
 
