@@ -1,5 +1,7 @@
 #![warn(clippy::all)]
+use clap::Parser;
 use colored::*;
+use config::Config;
 use handle_errors::handle_errors;
 use tracing_subscriber::fmt::format::FmtSpan;
 use uuid::Uuid;
@@ -19,20 +21,29 @@ mod types;
 
 #[tokio::main]
 async fn main() {
-    let log_rec = std::env::var("RUST_LOG")
-        .unwrap_or_else(|_| "rust-kb-center=info,warp=info,error".to_owned());
+    let args = Args::parse();
+
+    let log_rec = std::env::var("RUST_LOG").unwrap_or_else(|_| {
+        format!(
+            "handle_errors={},rust-kb-center={},wawrp={}",
+            args.log_level, args.log_level, args.log_level
+        )
+    });
 
     tracing_subscriber::fmt()
         .with_env_filter(log_rec)
         .with_span_events(FmtSpan::CLOSE)
         .init();
 
-    let db = Database::new("postgres://postgres:123123@localhost/postgres").await;
-    // run migrations after database successfull connection
+    let db = Database::new(&format!(
+        "postgres://{}:{}@{}:{}/{}",
+        args.db_user, args.db_user_password, args.db_url, args.db_port, args.db_name
+    ))
+    .await;
     sqlx::migrate!()
         .run(&db.clone().connection)
         .await
-        .expect("Migrations failed");
+        .expect("Can't complete connection: migrations failed");
     let db_access = warp::any().map(move || db.clone());
 
     let cors = warp::cors()
@@ -133,4 +144,29 @@ async fn main() {
         " 8080 ".on_bright_yellow().black().blink()
     );
     warp::serve(router).run(([127, 0, 0, 1], 8080)).await;
+}
+
+#[derive(clap::Parser, Debug, Default, serde::Deserialize, PartialEq)]
+struct Args {
+    /// Choose the level of logs printed on stdout terminal screen
+    #[clap(short, long, default_value = "warn")]
+    log_level: String,
+    /// Database location. Local or remote
+    #[clap(long, default_value = "localhost")]
+    db_url: String,
+    /// Exposed port to connect on the Database
+    #[clap(long, default_value = "5432")]
+    db_port: u16,
+    /// User attached to the Database
+    #[clap(long)]
+    db_user: String,
+    /// User password if needed to access the Database
+    #[clap(long)]
+    db_user_password: String,
+    /// The Database name
+    #[clap(long)]
+    db_name: String,
+    /// The exposed port over the WebSocket or localhost
+    #[clap(long, default_value = "8080")]
+    port: u16,
 }
