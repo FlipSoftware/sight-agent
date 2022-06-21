@@ -72,6 +72,7 @@ async fn main() {
     let add_kb = warp::post()
         .and(warp::path("kb"))
         .and(warp::path::end())
+        .and(routes::auth::auth())
         .and(db_access.clone())
         .and(warp::body::json())
         .and_then(add_kb);
@@ -80,6 +81,7 @@ async fn main() {
         .and(warp::path("kb"))
         .and(warp::path::param::<i32>())
         .and(warp::path::end())
+        .and(routes::auth::auth())
         .and(db_access.clone())
         .and(warp::body::json())
         .and_then(update_kb);
@@ -88,12 +90,14 @@ async fn main() {
         .and(warp::path("kb"))
         .and(warp::path::param::<i32>())
         .and(warp::path::end())
+        .and(routes::auth::auth())
         .and(db_access.clone())
         .and_then(delete_kb);
 
     let add_reply = warp::post()
         .and(warp::path("kb"))
         .and(warp::path::end())
+        .and(routes::auth::auth())
         .and(db_access.clone())
         .and(warp::body::form())
         .and_then(add_reply);

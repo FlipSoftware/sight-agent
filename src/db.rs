@@ -72,15 +72,20 @@ impl Database {
         }
     }
 
-    pub async fn add_kb(self, new_kb: NewKB) -> Result<KnowledgeBase, handle_errors::Error> {
+    pub async fn add_kb(
+        self,
+        new_kb: NewKB,
+        account_id: &AccountId,
+    ) -> Result<KnowledgeBase, handle_errors::Error> {
         match sqlx::query(
             "
-INSERT INTO kb (title, content, tags) VALUES ($1, $2, $3) RETURNING id, title, content, tags
+INSERT INTO kb (title, content, tags, account_id) VALUES ($1, $2, $3, $4) RETURNING id, title, content, tags, account_id
 ",
         )
         .bind(new_kb.title)
         .bind(new_kb.content)
         .bind(new_kb.tags)
+        .bind(account_id.0)
         .map(|row| KnowledgeBase {
             id: KBId(row.get("id")),
             title: row.get("title"),
@@ -102,11 +107,12 @@ INSERT INTO kb (title, content, tags) VALUES ($1, $2, $3) RETURNING id, title, c
         self,
         kb: KnowledgeBase,
         kb_id: i32,
+        account_id: &AccountId,
     ) -> Result<KnowledgeBase, handle_errors::Error> {
         match sqlx::query(
             "
 UPDATE kb SET title = $1, content = $2, tags = $3
-WHERE id = $4
+WHERE id = $4 AND account_id = $5
 RETURNING id, title, content, tags
             ",
         )
@@ -114,6 +120,7 @@ RETURNING id, title, content, tags
         .bind(kb.content)
         .bind(kb.tags)
         .bind(kb_id)
+        .bind(account_id.0)
         .map(|row| KnowledgeBase {
             id: KBId(row.get("id")),
             title: row.get("title"),
@@ -131,13 +138,18 @@ RETURNING id, title, content, tags
         }
     }
 
-    pub async fn delete_kb(self, kb_id: i32) -> Result<bool, handle_errors::Error> {
+    pub async fn delete_kb(
+        self,
+        kb_id: i32,
+        account_id: &AccountId,
+    ) -> Result<bool, handle_errors::Error> {
         match sqlx::query(
             "
-DELETE FROM kb WHERE id = $1
+DELETE FROM kb WHERE id = $1 AND account_id = $2
             ",
         )
         .bind(kb_id)
+        .bind(account_id.0)
         .execute(&self.connection)
         .await
         {
@@ -149,14 +161,19 @@ DELETE FROM kb WHERE id = $1
         }
     }
 
-    pub async fn add_reply(&self, new_reply: NewReply) -> Result<Reply, handle_errors::Error> {
+    pub async fn add_reply(
+        &self,
+        new_reply: NewReply,
+        account_id: &AccountId,
+    ) -> Result<Reply, handle_errors::Error> {
         match sqlx::query(
             "
-INSERT INTO reply (content, kb_id) VALUES ($1, $2)
+INSERT INTO reply (content, kb_id, account_id) VALUES ($1, $2, $3)
             ",
         )
         .bind(new_reply.content)
         .bind(new_reply.kb_id.0)
+        .bind(account_id.0)
         .map(|row| Reply {
             id: ReplyId(row.get("id")),
             content: row.get("content"),
@@ -168,6 +185,52 @@ INSERT INTO reply (content, kb_id) VALUES ($1, $2)
             Ok(reply) => Ok(reply),
             Err(e) => {
                 tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                Err(handle_errors::Error::DBQueryError(e))
+            }
+        }
+    }
+
+    pub async fn is_owner_of_kb(
+        &self,
+        account_id: &AccountId,
+        kb_id: i32,
+    ) -> Result<bool, handle_errors::Error> {
+        match sqlx::query(
+            "
+SELECT * FROM kb WHERE id = $1 AND account_id = $2
+            ",
+        )
+        .bind(kb_id)
+        .bind(account_id.0)
+        .fetch_optional(&self.connection)
+        .await
+        {
+            Ok(id) => Ok(id.is_some()),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                Err(handle_errors::Error::DBQueryError(e))
+            }
+        }
+    }
+
+    pub async fn is_owner_of_reply(
+        &self,
+        account_id: &AccountId,
+        reply_id: i32,
+    ) -> Result<bool, handle_errors::Error> {
+        match sqlx::query(
+            "
+SELECT * FROM reply WHERE id = $1 AND account_id = $2
+            ",
+        )
+        .bind(reply_id)
+        .bind(account_id.0)
+        .fetch_optional(&self.connection)
+        .await
+        {
+            Ok(id) => Ok(id.is_some()),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{}", e);
                 Err(handle_errors::Error::DBQueryError(e))
             }
         }

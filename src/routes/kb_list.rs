@@ -3,7 +3,11 @@ use tracing::{event, instrument, Level};
 
 use crate::{
     db::Database,
-    types::{kb::KnowledgeBase, pagination::Pagination},
+    types::{
+        account::Session,
+        kb::{KBId, KnowledgeBase},
+        pagination::Pagination,
+    },
     types::{kb::NewKB, pagination::get_page_offset},
 };
 
@@ -21,7 +25,7 @@ pub async fn get_kb(
     }
 
     match kb_db.get_kb(page.limit, page.offset).await {
-        Ok(res) => Ok(warp::reply::json(&res)),
+        Ok(kb) => Ok(warp::reply::json(&kb)),
         Err(e) => Err(warp::reject::custom(e)),
     }
 }
@@ -29,41 +33,54 @@ pub async fn get_kb(
 pub async fn get_kb_by_id(id: i32, kb_db: Database) -> Result<impl warp::Reply, warp::Rejection> {
     event!(target: "rust-kb-center", Level::INFO, "pick selected KD id from database...");
     match kb_db.get_kb_by_id(id).await {
-        Ok(res) => Ok(warp::reply::json(&res)),
+        Ok(kb) => Ok(warp::reply::json(&kb)),
         Err(e) => Err(warp::reject::custom(e)),
     }
 }
 
-pub async fn add_kb(kb_db: Database, new_kb: NewKB) -> Result<impl warp::Reply, warp::Rejection> {
-    match kb_db.add_kb(new_kb).await {
-        Ok(_) => Ok(warp::reply::with_status(
-            "Your question has been added to the base",
-            warp::http::StatusCode::OK,
-        )),
+pub async fn add_kb(
+    session: Session,
+    kb_db: Database,
+    new_kb: NewKB,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let account_id = session.account_id;
+
+    match kb_db.add_kb(new_kb, &account_id).await {
+        Ok(kb) => Ok(warp::reply::json(&kb)),
         Err(e) => Err(warp::reject::custom(e)),
     }
 }
 
 pub async fn update_kb(
     id: i32,
+    session: Session,
     kb_db: Database,
     update_kb: KnowledgeBase,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let updated_kb = KnowledgeBase {
-        id: update_kb.id.to_owned(),
-        title: update_kb.title.to_owned(),
-        content: update_kb.content.to_owned(),
-        tags: update_kb.tags.to_owned(),
-    };
-
-    match kb_db.update_kb(updated_kb, id).await {
-        Ok(res) => Ok(warp::reply::json(&res)),
-        Err(e) => Err(warp::reject::custom(e)),
+    let account_id = session.account_id;
+    if kb_db.is_owner_of_kb(&account_id, id).await? {
+        let updated_kb = KnowledgeBase {
+            id: KBId(id),
+            title: update_kb.title,
+            content: update_kb.content,
+            tags: update_kb.tags,
+        };
+        match kb_db.update_kb(updated_kb, id, &account_id).await {
+            Ok(kb) => Ok(warp::reply::json(&kb)),
+            Err(e) => Err(warp::reject::custom(e)),
+        }
+    } else {
+        Err(warp::reject::custom(handle_errors::Error::Unauthorized))
     }
 }
 
-pub async fn delete_kb(id: i32, kb_db: Database) -> Result<impl warp::Reply, warp::Rejection> {
-    match kb_db.delete_kb(id).await {
+pub async fn delete_kb(
+    id: i32,
+    session: Session,
+    kb_db: Database,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let account_id = session.account_id;
+    match kb_db.delete_kb(id, &account_id).await {
         Ok(_) => Ok(warp::reply::with_status(
             format!("KB{} deleted", id),
             warp::http::StatusCode::OK,

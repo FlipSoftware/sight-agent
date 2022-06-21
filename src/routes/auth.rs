@@ -1,9 +1,22 @@
+#![warn(clippy::all)]
 use crate::{
     db::Database,
-    types::account::{Account, AccountId},
+    types::account::{Account, AccountId, Session},
 };
 use argon2::{self, Config};
 use rand::{thread_rng, Rng};
+use warp::Filter;
+
+pub fn auth() -> impl Filter<Extract = (Session,), Error = warp::Rejection> + Clone {
+    warp::header::<String>("Authorization").and_then(|token| {
+        let token = match validate_token(token) {
+            Ok(tk) => tk,
+            Err(_) => return std::future::ready(Err(warp::reject::reject())),
+        };
+
+        std::future::ready(Ok(token))
+    })
+}
 
 pub async fn register(
     account_db: Database,
@@ -55,7 +68,7 @@ pub fn verify_password(hash: &str, password: &[u8]) -> Result<bool, argon2::Erro
     argon2::verify_encoded(hash, password)
 }
 
-pub fn gen_token(account_id: AccountId) -> String {
+fn gen_token(account_id: AccountId) -> String {
     let date_time_now = chrono::Utc::now();
     let expiry_date = date_time_now + chrono::Duration::days(1);
 
@@ -66,4 +79,16 @@ pub fn gen_token(account_id: AccountId) -> String {
         .set_claim("account_id", serde_json::json!(account_id))
         .build()
         .expect("Unable to generate paseto token")
+}
+
+pub fn validate_token(token: String) -> Result<Session, handle_errors::Error> {
+    let token = paseto::tokens::validate_local_token(
+        &token,
+        None,
+        "CHANGE THIS TO A SECRET DOV .ENV".as_bytes(),
+        &paseto::tokens::TimeBackend::Chrono,
+    )
+    .map_err(|_| handle_errors::Error::FailTokenDecryption)?;
+
+    serde_json::from_value::<Session>(token).map_err(|_| handle_errors::Error::FailTokenDecryption)
 }

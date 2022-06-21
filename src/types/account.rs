@@ -1,3 +1,5 @@
+#![warn(clippy::all)]
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -14,4 +16,12 @@ pub struct AccountId(pub i32);
 pub struct NewAccount {
     pub email: String,
     pub password: String,
+    pub nbf: DateTime<Utc>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Session {
+    pub expiry: DateTime<Utc>,
+    pub account_id: AccountId,
+    pub nbf: DateTime<Utc>,
 }
