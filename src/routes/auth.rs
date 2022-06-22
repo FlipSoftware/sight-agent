@@ -1,4 +1,5 @@
 #![warn(clippy::all)]
+
 use crate::{
     db::Database,
     types::account::{Account, AccountId, Session},
@@ -69,11 +70,12 @@ pub fn verify_password(hash: &str, password: &[u8]) -> Result<bool, argon2::Erro
 }
 
 fn gen_token(account_id: AccountId) -> String {
+    let secret = std::env::var("PASETO_SECRET").unwrap();
     let date_time_now = chrono::Utc::now();
     let expiry_date = date_time_now + chrono::Duration::days(1);
 
     paseto::tokens::PasetoBuilder::new()
-        .set_encryption_key(&Vec::from("CHANGE THIS TO A SECRET DOT .ENV".as_bytes()))
+        .set_encryption_key(&Vec::from(secret.as_bytes()))
         .set_expiration(&expiry_date)
         .set_not_before(&chrono::Utc::now())
         .set_claim("account_id", serde_json::json!(account_id))
@@ -82,13 +84,36 @@ fn gen_token(account_id: AccountId) -> String {
 }
 
 pub fn validate_token(token: String) -> Result<Session, handle_errors::Error> {
+    let secret = std::env::var("PASETO_SECRET").unwrap();
     let token = paseto::tokens::validate_local_token(
         &token,
         None,
-        "CHANGE THIS TO A SECRET DOV .ENV".as_bytes(),
+        secret.as_bytes(),
         &paseto::tokens::TimeBackend::Chrono,
     )
     .map_err(|_| handle_errors::Error::FailTokenDecryption)?;
 
     serde_json::from_value::<Session>(token).map_err(|_| handle_errors::Error::FailTokenDecryption)
+}
+
+#[cfg(test)]
+mod auth_tests {
+    use super::*;
+    use color_eyre::Result;
+
+    #[tokio::test]
+    async fn post_test() -> Result<()> {
+        color_eyre::install()?;
+
+        std::env::set_var("PASETO_SECRET", "CHANGE THIS TO A SECRET DOV .ENV");
+        let token = gen_token(AccountId(2));
+
+        let access = auth();
+
+        let response = warp::test::request()
+            .header("Authorization", token)
+            .filter(&access);
+        assert_eq!(response.await.unwrap().account_id, AccountId(2));
+        Ok(())
+    }
 }

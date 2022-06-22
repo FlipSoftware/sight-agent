@@ -1,3 +1,5 @@
+#![warn(clippy::all)]
+
 use std::collections::HashMap;
 use tracing::{event, instrument, Level};
 
