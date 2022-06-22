@@ -26,6 +26,8 @@ config = { version = "0.13", features = ["toml"] }
 clap = { version = "3", features = ["derive"] }
 proc-macro2 = "1"
 dotenv = "0.15"
+color-eyre = "0.6.1"
+jsonox = "0.2.0"
 
 [build-dependencies]
 platforms = "2"

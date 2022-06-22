@@ -70,7 +70,7 @@ pub fn verify_password(hash: &str, password: &[u8]) -> Result<bool, argon2::Erro
 }
 
 fn gen_token(account_id: AccountId) -> String {
-    let secret = std::env::var("PASETO_KEY").unwrap();
+    let secret = std::env::var("PASETO_SECRET").unwrap();
     let date_time_now = chrono::Utc::now();
     let expiry_date = date_time_now + chrono::Duration::days(1);
 
@@ -84,7 +84,7 @@ fn gen_token(account_id: AccountId) -> String {
 }
 
 pub fn validate_token(token: String) -> Result<Session, handle_errors::Error> {
-    let secret = std::env::var("PASETO_KEY").unwrap();
+    let secret = std::env::var("PASETO_SECRET").unwrap();
     let token = paseto::tokens::validate_local_token(
         &token,
         None,
@@ -94,4 +94,26 @@ pub fn validate_token(token: String) -> Result<Session, handle_errors::Error> {
     .map_err(|_| handle_errors::Error::FailTokenDecryption)?;
 
     serde_json::from_value::<Session>(token).map_err(|_| handle_errors::Error::FailTokenDecryption)
+}
+
+#[cfg(test)]
+mod auth_tests {
+    use super::*;
+    use color_eyre::Result;
+
+    #[tokio::test]
+    async fn post_test() -> Result<()> {
+        color_eyre::install()?;
+
+        std::env::set_var("PASETO_SECRET", "CHANGE THIS TO A SECRET DOV .ENV");
+        let token = gen_token(AccountId(2));
+
+        let access = auth();
+
+        let response = warp::test::request()
+            .header("Authorization", token)
+            .filter(&access);
+        assert_eq!(response.await.unwrap().account_id, AccountId(2));
+        Ok(())
+    }
 }

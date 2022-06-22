@@ -2,7 +2,7 @@
 use clap::Parser;
 use colored::*;
 
-#[derive(clap::Parser, Debug)]
+#[derive(clap::Parser, Debug, PartialEq, Eq)]
 pub struct Config {
     /// Choose the level of logs printed on stdout terminal screen
     #[clap(short, long, default_value = "warn")]
@@ -32,12 +32,12 @@ impl Config {
         dotenv::dotenv().ok();
         let config = Config::parse();
 
-        if std::env::var("PASETO_KEY").is_err() {
+        if std::env::var("PASETO_SECRET").is_err() {
             println!(
                 "{}",
-                "HINT: add a .env file or call PASETO_KEY manually in shell".yellow()
+                "HINT: add a .env file or call PASETO_SECRET manually in shell".yellow()
             );
-            panic!("Missing or invalid PASETO_KEY environment variable.")
+            panic!("Missing or invalid PASETO_SECRET environment variable.")
         }
 
         let port = std::env::var("PORT")
@@ -64,5 +64,44 @@ impl Config {
             db_user,
             db_user_password,
         })
+    }
+}
+
+#[cfg(test)]
+mod config_tests {
+    use super::*;
+    use color_eyre::Result;
+
+    fn set_env_vars() {
+        std::env::set_var("RUST_LOG", "warn");
+        std::env::set_var("PASETO_SECRET", "true");
+        std::env::set_var("POSTGRES_USER", "postgres");
+        std::env::set_var("POSTGRES_PASSWORD", "password");
+        std::env::set_var("POSTGRES_HOST", "localhost");
+        std::env::set_var("POSTGRES_PORT", "5432");
+        std::env::set_var("POSTGRES_DB", "postgres");
+    }
+
+    #[test]
+    fn check_env_vars() -> Result<()> {
+        color_eyre::install()?;
+
+        let check_empty_env = std::panic::catch_unwind(Config::new);
+        assert!(check_empty_env.is_err());
+
+        set_env_vars();
+        let valid_rhs = Config {
+            log_level: "warn".to_string(),
+            port: 8080,
+            db_user: "user".to_string(),
+            db_user_password: "password".to_string(),
+            db_host: "localhost".to_string(),
+            db_name: "postgres".to_string(),
+            db_port: 5432,
+        };
+        let result_config = Config::new().unwrap();
+
+        assert_eq!(result_config, valid_rhs);
+        Ok(())
     }
 }

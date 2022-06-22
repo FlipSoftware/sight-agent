@@ -1,4 +1,5 @@
 #![warn(clippy::all)]
+use color_eyre::eyre::Result;
 use colored::*;
 use handle_errors::handle_errors;
 use tracing_subscriber::fmt::format::FmtSpan;
