@@ -14,12 +14,12 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn new(db_url: &str) -> Result<Self, sqlx::Error> {
-        tracing::warn!("{}", db_url);
+    pub async fn new(db_host: &str) -> Result<Self, sqlx::Error> {
+        tracing::warn!("{}", db_host);
 
         let db_pool = PgPoolOptions::new()
             .max_connections(5)
-            .connect(db_url)
+            .connect(db_host)
             .await?;
 
         Ok(Database {

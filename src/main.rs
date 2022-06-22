@@ -1,5 +1,4 @@
 #![warn(clippy::all)]
-use clap::Parser;
 use colored::*;
 use handle_errors::handle_errors;
 use tracing_subscriber::fmt::format::FmtSpan;
@@ -11,34 +10,19 @@ use crate::routes::{
     reply::add_reply,
 };
 
+mod config;
 mod db;
 mod routes;
 mod types;
 
 #[tokio::main]
 async fn main() -> Result<(), handle_errors::Error> {
-    dotenv::dotenv().ok();
-
-    if std::env::var("PASETO_KEY").is_err() {
-        println!(
-            "{}",
-            "HINT: add a .env file or call PASETO_KEY manually in shell".yellow()
-        );
-        panic!("Missing or invalid PASETO_KEY environment variable.")
-    }
-
-    let port = std::env::var("PORT")
-        .ok()
-        .map(|p| p.parse::<u16>())
-        .unwrap_or(Ok(8080))
-        .map_err(handle_errors::Error::ParseError)?;
-
-    let args = Args::parse();
+    let cfg = config::Config::new().expect("Config module failed");
 
     let log_rec = std::env::var("RUST_LOG").unwrap_or_else(|_| {
         format!(
-            "handle_errors={},rust-kb-center={},warp={}",
-            args.log_level, args.log_level, args.log_level
+            "handle-errors={},rust-kb-center={},warp={}",
+            cfg.log_level, cfg.log_level, cfg.log_level
         )
     });
 
@@ -49,7 +33,7 @@ async fn main() -> Result<(), handle_errors::Error> {
 
     let db = db::Database::new(&format!(
         "postgres://{}:{}@{}:{}/{}",
-        args.db_user, args.db_user_password, args.db_url, args.db_port, args.db_name
+        cfg.db_user, cfg.db_user_password, cfg.db_host, cfg.db_port, cfg.db_name
     ))
     .await
     .map_err(handle_errors::Error::DBQueryError)?;
@@ -156,37 +140,12 @@ async fn main() -> Result<(), handle_errors::Error> {
     println!(
         "{}: {} ",
         "Running server on port".green().bold(),
-        port.to_string().on_bright_yellow().black().blink()
+        cfg.port.to_string().on_bright_yellow().black().blink()
     );
 
     tracing::info!("KB build ID {}", env!("RUST_KB_CENTER_VERSION"));
 
-    warp::serve(router).run(([127, 0, 0, 1], port)).await;
+    warp::serve(router).run(([127, 0, 0, 1], cfg.port)).await;
 
     Ok(())
-}
-
-#[derive(clap::Parser, Debug, Default, serde::Deserialize, PartialEq)]
-struct Args {
-    /// Choose the level of logs printed on stdout terminal screen
-    #[clap(short, long, default_value = "warn")]
-    log_level: String,
-    /// Database location. Local or remote
-    #[clap(long, default_value = "localhost")]
-    db_url: String,
-    /// Exposed port to connect on the Database
-    #[clap(long, default_value = "5432")]
-    db_port: u16,
-    /// User attached to the Database
-    #[clap(long)]
-    db_user: String,
-    /// User password if needed to access the Database
-    #[clap(long)]
-    db_user_password: String,
-    /// The Database name
-    #[clap(long)]
-    db_name: String,
-    /// The exposed port over the WebSocket or localhost
-    #[clap(long, default_value = "8080")]
-    port: u16,
 }

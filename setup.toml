@@ -1,5 +1,5 @@
 log_level = "warn"
-db_url = "localhost"
+db_host = "localhost"
 db_port = 5432
 db_user = "postgres"
 db_user_password = "123123"
