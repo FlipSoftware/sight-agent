@@ -1,4 +1,3 @@
-#![warn(clippy::all)]
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 

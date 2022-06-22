@@ -1,4 +1,5 @@
 #![warn(clippy::all)]
+
 use tracing::{event, instrument, Level};
 use warp::{reject::Reject, Rejection, Reply};
 
@@ -12,6 +13,7 @@ pub enum Error {
     LibArgonError(argon2::Error),
     FailTokenDecryption,
     Unauthorized,
+    MigrationError(sqlx::migrate::MigrateError),
 }
 
 impl std::fmt::Display for Error {
@@ -25,6 +27,7 @@ impl std::fmt::Display for Error {
             Error::LibArgonError(_) => write!(f, "Unable to verify password"),
             Error::FailTokenDecryption => write!(f, "Unable decrypt token"),
             Error::Unauthorized => write!(f, "Unauthorized access to modify content"),
+            Error::MigrationError(_) => write!(f, "Schema Migration failed"),
         }
     }
 }

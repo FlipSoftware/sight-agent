@@ -1,3 +1,5 @@
+#![warn(clippy::all)]
+
 use sqlx::{postgres::PgPoolOptions, PgPool, Row};
 
 use crate::types::{
@@ -12,19 +14,17 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn new(db_url: &str) -> Self {
-        let db_pool = match PgPoolOptions::new()
+    pub async fn new(db_url: &str) -> Result<Self, sqlx::Error> {
+        tracing::warn!("{}", db_url);
+
+        let db_pool = PgPoolOptions::new()
             .max_connections(5)
             .connect(db_url)
-            .await
-        {
-            Ok(pool) => pool,
-            _ => panic!("Connection to the database failed!"),
-        };
+            .await?;
 
-        Database {
+        Ok(Database {
             connection: db_pool,
-        }
+        })
     }
 
     pub async fn get_kb(
@@ -213,7 +213,7 @@ SELECT * FROM kb WHERE id = $1 AND account_id = $2
         }
     }
 
-    pub async fn is_owner_of_reply(
+    pub async fn _is_owner_of_reply(
         &self,
         account_id: &AccountId,
         reply_id: i32,

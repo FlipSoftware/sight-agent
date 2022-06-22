@@ -1,3 +1,5 @@
+#![warn(clippy::all)]
+
 use crate::{
     db::Database,
     types::{account::Session, reply::NewReply},

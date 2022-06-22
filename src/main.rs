@@ -1,18 +1,14 @@
 #![warn(clippy::all)]
 use clap::Parser;
 use colored::*;
-use config::Config;
 use handle_errors::handle_errors;
 use tracing_subscriber::fmt::format::FmtSpan;
 use uuid::Uuid;
 use warp::{http::Method, Filter};
 
-use crate::{
-    db::Database,
-    routes::{
-        kb_list::{add_kb, delete_kb, get_kb, get_kb_by_id, update_kb},
-        reply::add_reply,
-    },
+use crate::routes::{
+    kb_list::{add_kb, delete_kb, get_kb, get_kb_by_id, update_kb},
+    reply::add_reply,
 };
 
 mod db;
@@ -20,12 +16,28 @@ mod routes;
 mod types;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), handle_errors::Error> {
+    dotenv::dotenv().ok();
+
+    if std::env::var("PASETO_KEY").is_err() {
+        println!(
+            "{}",
+            "HINT: add a .env file or call PASETO_KEY manually in shell".yellow()
+        );
+        panic!("Missing or invalid PASETO_KEY environment variable.")
+    }
+
+    let port = std::env::var("PORT")
+        .ok()
+        .map(|p| p.parse::<u16>())
+        .unwrap_or(Ok(8080))
+        .map_err(handle_errors::Error::ParseError)?;
+
     let args = Args::parse();
 
     let log_rec = std::env::var("RUST_LOG").unwrap_or_else(|_| {
         format!(
-            "handle_errors={},rust-kb-center={},wawrp={}",
+            "handle_errors={},rust-kb-center={},warp={}",
             args.log_level, args.log_level, args.log_level
         )
     });
@@ -35,15 +47,18 @@ async fn main() {
         .with_span_events(FmtSpan::CLOSE)
         .init();
 
-    let db = Database::new(&format!(
+    let db = db::Database::new(&format!(
         "postgres://{}:{}@{}:{}/{}",
         args.db_user, args.db_user_password, args.db_url, args.db_port, args.db_name
     ))
-    .await;
+    .await
+    .map_err(handle_errors::Error::DBQueryError)?;
+
     sqlx::migrate!()
         .run(&db.clone().connection)
         .await
-        .expect("Can't complete connection: migrations failed");
+        .map_err(handle_errors::Error::MigrationError)?;
+
     let db_access = warp::any().map(move || db.clone());
 
     let cors = warp::cors()
@@ -139,11 +154,16 @@ async fn main() {
         .with(warp::trace::request())
         .recover(handle_errors);
     println!(
-        "{}: {}",
+        "{}: {} ",
         "Running server on port".green().bold(),
-        " 8080 ".on_bright_yellow().black().blink()
+        port.to_string().on_bright_yellow().black().blink()
     );
-    warp::serve(router).run(([127, 0, 0, 1], 8080)).await;
+
+    tracing::info!("KB build ID {}", env!("RUST_KB_CENTER_VERSION"));
+
+    warp::serve(router).run(([127, 0, 0, 1], port)).await;
+
+    Ok(())
 }
 
 #[derive(clap::Parser, Debug, Default, serde::Deserialize, PartialEq)]
