@@ -1,7 +1,7 @@
 <div align='center'>
 
   # Tempowise
-  
+
 </div>
 
 Tempowise is an innovative AI-powered app designed to help you manage your time effectively and enhance your productivity. Whether you're juggling work commitments, personal goals, or daily routines, Tempowise has you covered.
@@ -14,7 +14,7 @@ Tempowise is an innovative AI-powered app designed to help you manage your time 
 
 - **[Real-Time Insights]():** Tempowise provides you with real-time insights into your focus patterns and productivity. By visualizing your engagement and alertness levels, you can make informed decisions on how to structure your tasks and breaks throughout the day.
 
-- **[Habit Refinement]():** The Suggestions tab in Tempowise goes beyond just tracking – it learns your habits over time. This intelligent feature provides insights into how your daily routines impact your overall productivity. It offers data-driven recommendations for tweaking your habits, enabling you to make small yet impactful changes that maximize your efficiency.
+- **[Habit Refinement]():** The Suggestions tab learns your habits over time. This intelligent feature provides insights into how your daily routines impact your overall productivity. It offers data-driven recommendations for tweaking your habits, enabling you to make small yet impactful changes that maximize your efficiency.
 
 # License
 
@@ -25,5 +25,5 @@ Tempowise is released under the [MIT License](LICENSE).
 <div align='center'>
 
   #### Efficient time management in the digital age.
-  
+
 </div>
