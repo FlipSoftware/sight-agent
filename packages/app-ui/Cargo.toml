@@ -1,0 +1,19 @@
+[package]
+name = "app-ui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# [lib]
+
+[dependencies]
+dioxus = "0.3.1"
+dioxus-router = "0.3.0"
+log = "0.4.17"
+dioxus-web = "0.3.0"
+
+# optimize WASM for size
+[profile.release]
+opt-level = "z"
+debug = false
+lto = true

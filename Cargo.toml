@@ -1,0 +1,5 @@
+[workspace]
+members = ["packages/api-server", "packages/api-shared", "packages/app-ui"]
+
+[workspace.dependencies]
+miette = "5.10.0"
