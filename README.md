@@ -19,11 +19,3 @@ Tempowise is an innovative AI-powered app designed to help you manage your time 
 # License
 
 Tempowise is released under the [MIT License](LICENSE).
-
----
-
-<div align='center'>
-
-  #### Efficient time management in the digital age.
-
-</div>
