@@ -8,7 +8,7 @@ Tempowise is an innovative AI-powered app designed to help you manage your time 
 
 # [Key Features]()
 
-- **[Personalized Schedule]():** Tempowise analyzes your daily routines, work commitments, and personal goals to create a personalized time management plan. It suggests optimal time windows for different tasks based on your productivity patterns.
+- **[Personalized Schedule]():** Tempowise analyzes your daily routines (added by you or let the app scan your habits), work commitments, and personal goals to create a personalized time management plan. It suggests optimal time windows for different tasks based on your productivity patterns.
 
 - **[Digital Habits Improvement]():** In today's digital age, maintaining healthy digital habits is crucial. Tempowise helps you achieve this by identifying patterns of distraction and focus. It generates real-time insights to help you understand when and where your focus is wavering, empowering you to take control of your digital interactions.
 
